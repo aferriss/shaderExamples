@@ -1,5 +1,6 @@
 //Press Spacebar to cycle convolution filters
 int mode = 0;
+
 String filterType = "emboss";
 PShader shader;
 PImage img;
@@ -13,6 +14,7 @@ float[] values = {
 void setup(){
   size(640,360, P2D);
   layer = createGraphics(width, height, P2D);
+  
   shader = loadShader("convolution.glsl");
   img = loadImage("img.jpg");
   
@@ -20,14 +22,16 @@ void setup(){
   shader.set("step", 1.0/width, 1.0/height);
   
   noStroke();
+  
+  
 }
 
 void draw(){
   shader.set("values", values);
-  
+    
   layer.beginDraw();
-  layer.shader(shader);
-  layer.rect(0,0,width, height);
+    layer.shader(shader);
+    layer.rect(0,0,width, height);
   layer.endDraw();
   
   image(layer, 0,0);
@@ -68,6 +72,5 @@ void keyPressed(){
    values[3] = 0.111;  values[4] = 0.111;  values[5] = 0.111;
    values[6] = 0.111;  values[7] = 0.111;  values[8] = 0.111;
  }
- 
 
 }
