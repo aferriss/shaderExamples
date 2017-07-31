@@ -3,21 +3,19 @@ import processing.video.*;  //<>//
 Capture cam;
 
 PShader diff;
-
-int maxFrames =2;
-boolean doShader = false;
-
-PImage[] frames = new PImage[maxFrames];
-int inc = 0;
-int texIndex = 0;
-int pastIndex = 1;
+PGraphics lastFrame;
 
 
 void setup() {
   size(1280, 720, P2D);
 
+  // load the frag shader from file
   diff = loadShader("diff.glsl");
-
+  
+  // set up our PGraphics last frame
+  lastFrame = createGraphics(width, height, P2D);
+  
+  // get the camera
   String[] cameras = Capture.list(); 
   if (cameras == null) {
     cam = new Capture(this, 640, 360);
@@ -28,35 +26,31 @@ void setup() {
     cam = new Capture(this, cameras[0]);
     cam.start();
   }
-
-
+  
   noStroke();
 }
 
 void draw() {
 
+  // check if the camera is ready
   if (cam.available() == true) {
     cam.read();
-
-    frames[texIndex] = cam.copy();
-    texIndex = (texIndex + 1) % frames.length;
-    pastIndex = (pastIndex + 1) % frames.length;
-
-    if (doShader) {
-      diff.set("lastFrame", frames[pastIndex]);
-      diff.set("srcTex", frames[texIndex]);
-    } else {
-      diff.set("lastFrame", cam);
+      // set the uniforms
+      diff.set("lastFrame", lastFrame);
       diff.set("srcTex", cam);
-
-      for (int i = 0; i<frames.length; i++) {
-        //fill array with frames from cam initially
-        frames[i] = cam.copy();
-      }
-      doShader = true;
-    }
   }
   
+  // use the shader
   shader(diff);
   rect(0, 0, width, height);
+  
+  // reset shader is required to make this work
+  // otherwise lastFrame tries to use our diff shader
+  // assuming that this is just unbinding the currently bound shader
+  resetShader();
+  
+  // draw the current frame into PGraphics to be used as the prev frame next go round
+  lastFrame.beginDraw();
+    lastFrame.image(cam, 0,0);
+  lastFrame.endDraw();
 }
